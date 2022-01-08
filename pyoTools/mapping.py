@@ -1,3 +1,5 @@
+import datetime
+import shutil
 from pyo import *
 import json
 
@@ -80,10 +82,10 @@ class Mapping:
                     if "controls" in m.keys():
                         modules_parameters[module][param] = dict()
                         for c in m["controls"]:
-                            v = getattr(controls[p]["pyoo"], c["parameter"])
+                            v = getattr(self.controls[p]["pyoo"], c["parameter"])
                             modules_parameters[module][param][c["parameter"]] = v.get()
                     else:
-                        modules_parameters[module][param] = controls[p]["portamento"].get()
+                        modules_parameters[module][param] = self.controls[p]["portamento"].get()
 
         lines = []
         for module in modules_parameters.keys():
@@ -96,3 +98,24 @@ class Mapping:
 #        now = datetime.now()  # current date and time
 #        params_df.to_csv("params" + now.strftime("%Y%m%d%H%M") + ".csv")
         return modules_parameters
+
+    def save_parameters(self):
+        now = datetime.now()  # current date and time
+        with open("params" + now.strftime("%Y%m%d%H%M") + ".json", 'w') as f:
+            json.dump(self.export_values(), f)
+
+    def print_parameters(self):
+        vals = json.dumps(self.export_values(),indent=4,sort_keys=True)
+        nb_lines = len(vals.split("\n"))
+
+        for l in range(nb_lines):
+            print("delete")
+            _delete_last_line()
+        print(vals, end="\r")
+
+
+def _delete_last_line():
+    sys.stdout.write('\b\b\r')
+    sys.stdout.write(' ' * shutil.get_terminal_size((80, 20)).columns)
+    sys.stdout.write('\b\r')
+    sys.stdout.flush()

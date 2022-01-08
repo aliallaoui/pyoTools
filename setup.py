@@ -2,7 +2,6 @@ import os
 from setuptools import setup, find_packages
 
 
-
 setup(
     name="pyotools",
     version=0.1,
@@ -17,7 +16,7 @@ setup(
     install_requires=["pyo>=1.0"],
     entry_points={
         'console_scripts': [
-        ],
-    },
-
+            'miphymap=pyoTools.cli_mapping:mapping'
+        ]
+    }
 )
