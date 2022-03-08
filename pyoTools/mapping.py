@@ -2,6 +2,7 @@ import datetime
 import shutil
 from pyo import *
 from .fm import *
+from .ellipse import *
 import json
 
 
@@ -30,15 +31,20 @@ class Mapping:
                 self.nb_input_channels = self.nb_input_channels + 1
                 self.controls[m['parameter']]["ctrls"] = dict()
                 for c in m["controls"]:
-                    self.controls[m['parameter']]["ctrls"][c["parameter"]] = dict()
-                    a = self.controls[m['parameter']]["ctrls"][c["parameter"]]
-                    a["midictl"] = Midictl(ctlnumber=c['ctrl'],
-                                           minscale=c['min'],
-                                           maxscale=c['max'])
-                    a["portamento"] = Port(a["midictl"])
-                    setattr(self.controls[m['parameter']]["pyoo"],
-                            c["parameter"],
-                            a["portamento"])
+                    if 'ctrl' in c:
+                        self.controls[m['parameter']]["ctrls"][c["parameter"]] = dict()
+                        a = self.controls[m['parameter']]["ctrls"][c["parameter"]]
+                        a["midictl"] = Midictl(ctlnumber=c['ctrl'],
+                                               minscale=c['min'],
+                                               maxscale=c['max'])
+                        a["portamento"] = Port(a["midictl"])
+                        setattr(self.controls[m['parameter']]["pyoo"],
+                                c["parameter"],
+                                a["portamento"])
+                    else:
+                        setattr(self.controls[m['parameter']]["pyoo"],
+                                c["parameter"],
+                                c["value"])
             else:
                 self.controls[m['parameter']]["midictl"] = Midictl(ctlnumber=m['ctrl'],
                                                                    minscale=m['min'],
@@ -84,7 +90,10 @@ class Mapping:
                         modules_parameters[module][param] = dict()
                         for c in m["controls"]:
                             v = getattr(self.controls[p]["pyoo"], c["parameter"])
-                            modules_parameters[module][param][c["parameter"]] = v.get()
+                            if type(v) == float:
+                                modules_parameters[module][param][c["parameter"]] = v
+                            else:
+                                modules_parameters[module][param][c["parameter"]] = v.get()
                     else:
                         modules_parameters[module][param] = self.controls[p]["portamento"].get()
 
@@ -105,6 +114,10 @@ class Mapping:
         with open("params" + now.strftime("%Y%m%d%H%M") + ".json", 'w') as f:
             json.dump(self.export_values(), f)
 
+    def load_latest_paramters():
+        self.load_parameters(glob.glob("params*.json")[-1])
+
+        
     def print_parameters(self):
         vals = json.dumps(self.export_values(),indent=4,sort_keys=True)
         nb_lines = len(vals.split("\n"))
