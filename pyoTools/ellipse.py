@@ -73,6 +73,15 @@ class Ellipse(PyoObject):
         self._position.phase = phase
 
     @property
+    def rotation_frequency(self):
+        return self._rotation_frequency
+
+    @rotation_frequency.setter
+    def rotation_frequency(self,rotation_frequency):
+        self._rotation_frequency = rotation_frequency
+        self._position.freq = rotation_frequency
+        
+    @property
     def center_x(self):
         return self._center_x
 
