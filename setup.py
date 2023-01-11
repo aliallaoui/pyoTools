@@ -16,7 +16,7 @@ setup(
     install_requires=["pyo>=1.0"],
     entry_points={
         'console_scripts': [
-            'miphymap=pyoTools.cli_mapping:mapping'
+            'miphymap=pyoTools.cli_mapping:mapping_cli'
         ]
     }
 )

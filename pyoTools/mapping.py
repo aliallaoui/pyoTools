@@ -20,7 +20,8 @@ class Mapping:
         for m in self.mappings:
             if "channel" in m.keys():
                 self.nb_input_channels = self.nb_input_channels + 1
-
+        self.fadetime = 5
+        
     def load(self):
         for m in self.mappings:
             self.controls[m['parameter']] = dict()
@@ -52,7 +53,35 @@ class Mapping:
                                                                    init=m['start'],
                                                                    channel=1)
                 self.controls[m['parameter']]["portamento"] = Port(self.controls[m['parameter']]["midictl"]).out(m["channel"])
+        print(self.controls)
+        print(self.controls.keys())
 
+        
+    def restore_midi_ctl(self,parameters=[]):
+        for m in self.mappings:
+            if "pyoo" in m.keys():
+                if m["parameter"] not in [".".join(p.split(".")[:-1]) for p in parameters] or not parameters:
+                    continue
+                
+                if m["pyoo"] not in globals():
+                    raise Exception("Pyo object " + m["pyoo"] + " does not exist")
+                for c in m["controls"]:
+                    if 'ctrl' in c:
+                        if c["parameter"] not in [p.split(".")[-1] for p in parameters]:
+                            continue
+                        a = self.controls[m['parameter']]["ctrls"][c["parameter"]]
+                        setattr(self.controls[m['parameter']]["pyoo"],
+                                c["parameter"],
+                                a["portamento"])
+                        print(f"set {c} with a['midictl']")
+                        self.controls[m['parameter']]["ctrls"][c["parameter"]]["portamento"].setInput(a["midictl"])
+                        
+            else:
+                if m["parameter"] not in parameters or not parameters:
+                    continue
+                self.controls[m['parameter']]["portamento"].setInput(self.controls[m['parameter']]["midictl"])
+        print(self.controls)
+                
     def load_parameters(self, values_path=None):
         if values_path is not None:
             with open(values_path) as f:
@@ -64,15 +93,21 @@ class Mapping:
             module_params = self.values[module]
             for param in module_params.keys():
                 value = module_params[param]
+                print(f"set {param} with {value}") 
                 if type(value) == dict:
                     for pyoo_param in value.keys():
                         self.controls[module + "." + param]["ctrls"][pyoo_param]["value"] = Sig(value[pyoo_param])
                         self.controls[module + "." + param]["ctrls"][pyoo_param]["portamento"].setInput(
                             self.controls[module + "." + param]["ctrls"][pyoo_param]["value"])
-
                 else:
                     self.controls[module + "." + param]["value"] = Sig(value)
-                    self.controls[module + "." + param]["portamento"].setInput(controls[module + "." + param]["value"])
+                    # portamento = self.controls[f"{module}.{param}"]["portamento"]
+                    # value_mod = 
+                    # portamento.set
+                    if "portamento" not in self.controls[f"{module}.{param}"].keys():
+                        print("Cannot set param {param} on {module}")
+                    else:
+                        self.controls[f"{module}.{param}"]["portamento"].setInput(self.controls[f"{module}.{param}"]["value"],fadetime=self.fadetime)
 
     def export_values(self):
         modules_parameters = dict()
@@ -110,7 +145,7 @@ class Mapping:
         return modules_parameters
 
     def save_parameters(self):
-        now = datetime.now()  # current date and time
+        now = datetime.datetime.now()  # current date and time
         with open("params" + now.strftime("%Y%m%d%H%M") + ".json", 'w') as f:
             json.dump(self.export_values(), f)
 
