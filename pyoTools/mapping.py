@@ -162,7 +162,21 @@ class Mapping:
             _delete_last_line()
         print(vals, end="\r")
 
+    def edit_range_min(self,param,value):
+        param_dec = param.split(".")
+        if len(param_dec) == 2:
+            self.controls[param]["midictl"].setMinScale(value)
+        else:
+            self.controls[".".join(param_dec[:-1])]["ctrls"][param_dec[-1]]["midictl"].setMinScale(value)
 
+    def edit_range_max(self,param,value):
+        param_dec = param.split(".")
+        if len(param_dec) == 2:
+            self.controls[m['parameter']]["midictl"].setMaxScale(value)
+        else:
+            self.controls[".".join(param_dec[:-1])]["ctrls"][param_dec[-1]]["midictl"].setMaxScale(value)
+                               
+        
 def _delete_last_line():
     sys.stdout.write('\b\b\r')
     sys.stdout.write(' ' * shutil.get_terminal_size((80, 20)).columns)
